@@ -1,62 +1,105 @@
 import React, { useState } from 'react';
 import {
   View,
-  TextInput,
   Text,
-  Image,
   StyleSheet,
+  Image,
   TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
 } from 'react-native';
-import Checkbox from 'expo-checkbox'; // expo-checkbox 가져오기
+import { useNavigation } from '@react-navigation/native';
 
-// 로그인 화면
-const LoginScreen = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [rememberMe, setRememberMe] = useState(false); // CheckBox 상태
+const ProfileScreen = ({ onLogout }) => {
+  const navigation = useNavigation();
+  const [selectedTab, setSelectedTab] = useState('profile');
 
-  const handleLogin = () => {
-    if (username === '2412345' && password === 'password') {
-      onLoginSuccess();
-    } else {
-      setError(
-        '학번 또는 패스워드가 잘못되었습니다. 학번과 패스워드를 정확히 입력해주세요.'
-      );
-      setUsername('');
-      setPassword('');
+  const handleTabPress = (tab) => {
+    setSelectedTab(tab);
+    if (tab === 'home') {
+      navigation.navigate('HomeScreen');
+    } else if (tab === 'alarm') {
+      navigation.navigate('NotificationScreen');
     }
   };
 
   return (
-    <View style={styles.loginContainer}>
-      <Image source={require('../assets/logo.png')} style={styles.logo} />
-      <TextInput
-        placeholder="학번"
-        value={username}
-        onChangeText={setUsername}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="패스워드"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
-      <View style={styles.checkboxContainer}>
-        <Checkbox
-          value={rememberMe}
-          onValueChange={setRememberMe}
-          color={rememberMe ? '#1d4ed8' : undefined}
-        />
-        <Text style={styles.checkboxText}>아이디/비밀번호 저장</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>PROFILE</Text>
+        <View style={styles.infoContainer}>
+          <View style={styles.infoRow}>
+            <Image
+              source={require('../assets/user-icon.png')}
+              style={styles.icon}
+            />
+            <Text style={styles.infoLabel}>이름</Text>
+            <Text style={styles.infoText}>홍길동</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Image
+              source={require('../assets/id-icon.png')}
+              style={styles.icon}
+            />
+            <Text style={styles.infoLabel}>학번</Text>
+            <Text style={styles.infoText}>2412345</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Image
+              source={require('../assets/school-icon.png')}
+              style={styles.icon}
+            />
+            <Text style={styles.infoLabel}>소속</Text>
+            <Text style={styles.infoText}>모바일소프트웨어트랙</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+          <Text style={styles.logoutText}>로그아웃</Text>
+        </TouchableOpacity>
+      </ScrollView>
+      {/* 하단 네비게이션 바 */}
+      <View style={styles.navigationBar}>
+        <TouchableOpacity
+          onPress={() => handleTabPress('home')}
+          style={styles.navButton}
+        >
+          <Image
+            source={
+              selectedTab === 'home'
+                ? require('../assets/home-1.png')
+                : require('../assets/home-2.png')
+            }
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleTabPress('alarm')}
+          style={styles.navButton}
+        >
+          <Image
+            source={
+              selectedTab === 'alarm'
+                ? require('../assets/alarm-1.png')
+                : require('../assets/alarm-2.png')
+            }
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleTabPress('profile')}
+          style={styles.navButton}
+        >
+          <Image
+            source={
+              selectedTab === 'profile'
+                ? require('../assets/profile-1.png')
+                : require('../assets/profile-2.png')
+            }
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>로그인</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -108,7 +151,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
-    elevation: 5, // 안드로이드 그림자 효과
+    elevation: 5,
   },
   loginButtonText: {
     color: '#fff',

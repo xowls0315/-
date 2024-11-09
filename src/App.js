@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from './SplashScreen';
 import LoginScreen from './LoginScreen';
 import ManualScreen from './ManualScreen';
 import HomeScreen from './HomeScreen';
-import NotificationScreen from './NotificationScreen'; // 알림 화면 추가
+import NotificationScreen from './NotificationScreen';
+import ProfileScreen from './ProfileScreen';
 
-// 초기 과목 데이터
 const initialSubjects = [
   {
     title: '고급모바일프로그래밍',
@@ -38,37 +37,45 @@ export default function App() {
   }
 
   if (!loggedIn) {
-    return <LoginScreen onLoginSuccess={() => setLoggedIn(true)} />;
+    return (
+      <LoginScreen
+        onLoginSuccess={() => {
+          setLoggedIn(true);
+        }}
+      />
+    );
   }
 
   if (showManual) {
     return <ManualScreen onComplete={() => setShowManual(false)} />;
   }
 
-  const handleSubjectClick = (subject) => {
-    Alert.alert(`선택된 과목: ${subject.title}`, subject.details);
+  const handleLogout = () => {
+    setLoggedIn(false);
   };
 
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="HomeScreen">
-        <Stack.Screen
-          name="HomeScreen"
-          options={{ headerShown: false }} // 헤더 숨기기
-        >
+        <Stack.Screen name="HomeScreen" options={{ headerShown: false }}>
           {(props) => (
             <HomeScreen
               {...props}
               subjects={initialSubjects}
-              onSubjectClick={handleSubjectClick}
+              onSubjectClick={(subject) =>
+                Alert.alert(`선택된 과목: ${subject.title}`, subject.details)
+              }
             />
           )}
         </Stack.Screen>
         <Stack.Screen
           name="NotificationScreen"
           component={NotificationScreen}
-          options={{ headerShown: false }} // 헤더 숨기기
+          options={{ headerShown: false }}
         />
+        <Stack.Screen name="ProfileScreen" options={{ headerShown: false }}>
+          {(props) => <ProfileScreen {...props} onLogout={handleLogout} />}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );

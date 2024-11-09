@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     height: 60,
-    borderTopWidth: 1,
+    borderTopWidth: 3,
     borderTopColor: '#ddd',
     backgroundColor: '#fff',
     position: 'absolute', // 네비게이션 바를 하단에 고정

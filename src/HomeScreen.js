@@ -9,13 +9,12 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // 네비게이션 추가
+import { useNavigation } from '@react-navigation/native';
 
-// 홈 화면
 const HomeScreen = ({ subjects = [] }) => {
   const [subjectList, setSubjectList] = useState(subjects);
   const [selectedTab, setSelectedTab] = useState('home');
-  const navigation = useNavigation(); // 네비게이션 훅 사용
+  const navigation = useNavigation();
 
   const handleSubjectClick = (subject) => {
     Alert.alert('과목 선택', `${subject.title}의 수행할 업무가 출력됩니다.`);
@@ -27,7 +26,9 @@ const HomeScreen = ({ subjects = [] }) => {
   const handleTabPress = (tab) => {
     setSelectedTab(tab);
     if (tab === 'alarm') {
-      navigation.navigate('NotificationScreen'); // 알림 화면으로 이동
+      navigation.navigate('NotificationScreen');
+    } else if (tab === 'profile') {
+      navigation.navigate('ProfileScreen');
     }
   };
 
@@ -50,25 +51,20 @@ const HomeScreen = ({ subjects = [] }) => {
             />
           </TouchableOpacity>
         </View>
-        {subjectList.length > 0 ? (
-          <FlatList
-            data={subjectList}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => handleSubjectClick(item)}
-                style={[styles.subjectCard, { backgroundColor: item.color }]}
-              >
-                <Text style={styles.subjectTitle}>{item.title}</Text>
-                <Text style={styles.subjectDetails}>{item.details}</Text>
-              </TouchableOpacity>
-            )}
-            keyExtractor={(item, index) => index.toString()}
-          />
-        ) : (
-          <View style={styles.noSubjectsContainer}>
-            <Text style={styles.noSubjectsText}>남은 과제가 없습니다.</Text>
-          </View>
-        )}
+        <FlatList
+          data={subjectList}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => handleSubjectClick(item)}
+              style={[styles.subjectCard, { backgroundColor: item.color }]}
+            >
+              <Text style={styles.subjectTitle}>{item.title}</Text>
+              <Text style={styles.subjectDetails}>{item.details}</Text>
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.subjectList}
+        />
         {/* 하단 네비게이션 바 */}
         <View style={styles.navigationBar}>
           <TouchableOpacity
@@ -123,39 +119,44 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    padding: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center', // 수정: 모든 항목을 중앙에 정렬
-    paddingHorizontal: 16,
+    justifyContent: 'center',
     marginBottom: 20,
+    position: 'relative', // 상대 위치를 사용하여 자식 요소를 배치
   },
   title: {
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
+    flex: 1, // 제목이 중앙에 위치하도록 설정
   },
   refreshButton: {
-    position: 'absolute', // 수정: 새로고침 버튼을 절대 위치로 설정
-    right: 16, // 오른쪽 여백 설정
+    position: 'absolute', // 절대 위치로 설정
+    right: 0, // 오른쪽에 배치
   },
   refreshIcon: {
-    width: 27,
-    height: 27,
+    width: 24,
+    height: 24,
+  },
+  subjectList: {
+    paddingBottom: 80,
   },
   subjectCard: {
-    borderRadius: 10,
-    padding: 16,
+    borderRadius: 8,
+    padding: 12,
     marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowRadius: 3,
+    elevation: 2,
   },
   subjectTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -164,31 +165,20 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
-  noSubjectsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noSubjectsText: {
-    fontSize: 25,
-    color: '#999',
-    textAlign: 'center',
-  },
   navigationBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
     height: 60,
-    borderTopWidth: 1,
+    borderTopWidth: 3,
     borderTopColor: '#ddd',
     backgroundColor: '#fff',
-    position: 'absolute', // 네비게이션 바를 하단에 고정
+    position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
   },
   navButton: {
-    justifyContent: 'center',
     alignItems: 'center',
   },
   navIcon: {
