@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, Button, StyleSheet, Image } from 'react-native';
 
 // 매뉴얼 화면
 const ManualScreen = ({ onComplete }) => {
@@ -9,22 +9,22 @@ const ManualScreen = ({ onComplete }) => {
     {
       text: '수강중인 과목의 출석 여부를 파악해 결석자 미리 알림을 알려드려요!',
       image: require('../assets/page1.png'),
-      buttonText: 'Next →',
+      buttonText: 'Next',
     },
     {
       text: '각각의 일정을 터치하면 상세 내용을 알아볼 수 있어요!',
       image: require('../assets/page2.png'),
-      buttonText: 'Next →',
+      buttonText: 'Next',
     },
     {
       text: '과제 제출 또는 일정 설정을 완료했다면 상단의 서류봉투 버튼을 눌러 알림 목록을 정리할 수 있어요!',
       image: require('../assets/page3.png'),
-      buttonText: 'Next →',
+      buttonText: 'Next',
     },
     {
       text: '사용자가 설정한 기준에 따라 마감 기한이 임박한 과제들을 알림으로 알려드려요!',
       image: require('../assets/page4.png'),
-      buttonText: 'Start →',
+      buttonText: 'Start',
     },
   ];
 
@@ -61,20 +61,16 @@ const ManualScreen = ({ onComplete }) => {
       </View>
       <View style={styles.navigationContainer}>
         {currentPage === 0 ? (
-          <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.navButtonText}>Skip</Text>
-          </TouchableOpacity>
+          <Button title="Skip" onPress={handleSkip} color="#000000" />
         ) : (
-          <TouchableOpacity onPress={handlePrev} style={styles.navButton}>
-            <Text style={styles.navButtonText}>← Prev</Text>
-          </TouchableOpacity>
+          <Button title="← Prev" onPress={handlePrev} color="#000000" />
         )}
         <Image source={require('../assets/icon.png')} style={styles.icon} />
-        <TouchableOpacity onPress={handleNext} style={styles.navButton}>
-          <Text style={styles.navButtonText}>
-            {pages[currentPage].buttonText}
-          </Text>
-        </TouchableOpacity>
+        <Button
+          title={pages[currentPage].buttonText}
+          onPress={handleNext}
+          color="#000000"
+        />
       </View>
     </View>
   );
@@ -127,18 +123,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
     marginTop: 20,
-  },
-  navButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  skipButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  navButtonText: {
-    fontSize: 16,
-    color: '#1d4ed8',
   },
   icon: {
     width: 40,

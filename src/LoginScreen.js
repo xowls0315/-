@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   TextInput,
-  Button,
   Text,
   Image,
   StyleSheet,
@@ -105,6 +104,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5, // 안드로이드 그림자 효과
   },
   loginButtonText: {
     color: '#fff',
