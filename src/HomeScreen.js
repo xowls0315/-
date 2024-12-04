@@ -1,106 +1,205 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { dummyData } from './dummyData';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  Image,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const calculateRemainingTime = (deadline) => {
-  const now = new Date();
-  const deadlineDate = new Date(`${new Date().getFullYear()}-${deadline}`);
-  const diffMs = deadlineDate - now;
+const HomeScreen = ({ assignments }) => {
+  const navigation = useNavigation(); // 네비게이션 사용
+  const [taskList, setTaskList] = useState([]); // 현재 화면에 표시되는 할 일 목록
+  const [originalTaskList, setOriginalTaskList] = useState([]); // 새로고침을 위해 전체 데이터를 저장
 
-  if (diffMs <= 0) return '마감되었습니다.';
+  useEffect(() => {
+    if (assignments && assignments.length > 0) {
+      setTaskList(assignments); // 초기 데이터 설정
+      setOriginalTaskList(assignments); // 새로고침을 위해 데이터 백업
+    }
+  }, [assignments]);
 
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const diffHours = Math.floor(
-    (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-  );
+  const handleRemoveTask = (task) => {
+    setTaskList((prevTaskList) => prevTaskList.filter((item) => item !== task));
+  };
 
-  if (diffDays > 0) {
-    return `${diffDays}일 ${diffHours}시간 남음`;
-  } else {
-    return `${diffHours}시간 남음`;
-  }
-};
+  const handleRefresh = () => {
+    setTaskList(originalTaskList); // 새로고침 시 원래 데이터 복원
+  };
 
-export default function HomeScreen({ route }) {
-  const { courses = dummyData } = route.params || {}; // 기본값으로 dummyData 사용
-
-  if (!courses || courses.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>수강 가능한 강좌가 없습니다.</Text>
-      </View>
-    );
-  }
+  const handleTabPress = (tab) => {
+    if (tab === 'alarm') {
+      navigation.navigate('NotificationScreen');
+    } else if (tab === 'profile') {
+      navigation.navigate('ProfileScreen');
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      {/* 상단 제목 */}
-      <View style={styles.header}>
-        <Text style={styles.title}>강좌 목록</Text>
-      </View>
-      {/* 강좌 목록 */}
-      <FlatList
-        data={courses}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.courseTitle}>{item[0]?.courseName}</Text>
-            {item.map((lecture, idx) => (
-              <Text key={idx} style={styles.videoText}>
-                - {lecture.lecture_title} ({lecture.lecture_length}) {'\n'}
-                마감 기한: {lecture.deadline} {'\n'}
-                남은 시간: {calculateRemainingTime(lecture.deadline)}
-              </Text>
-            ))}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Schedule</Text>
+          <TouchableOpacity
+            onPress={handleRefresh}
+            style={styles.refreshButton}
+          >
+            <Image
+              source={require('../assets/refresh.png')}
+              style={styles.refreshIcon}
+            />
+          </TouchableOpacity>
+        </View>
+        {/* Task List */}
+        {taskList.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>현재 처리할 할 일이 없습니다.</Text>
           </View>
+        ) : (
+          <FlatList
+            data={taskList}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => handleRemoveTask(item)} // 터치 시 taskCard 제거
+                style={styles.taskCard}
+              >
+                <Text style={styles.taskTitle}>과목: {item.courseName}</Text>
+                <Text style={styles.taskDetails}>
+                  마감 기한: {item.deadline}
+                </Text>
+                <Text style={styles.taskStatus}>상태: {item.status}</Text>
+                <Text style={styles.taskDetails}>할 일: {item.title}</Text>
+                <Text style={styles.taskDetails}>주차: {item.week}</Text>
+              </TouchableOpacity>
+            )}
+            keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle={styles.taskList}
+          />
         )}
-      />
-    </View>
+      </View>
+      {/* Navigation Bar */}
+      <View style={styles.navigationBar}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('HomeScreen')}
+          style={styles.navButton}
+        >
+          <Image
+            source={require('../assets/home-1.png')}
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleTabPress('alarm')}
+          style={styles.navButton}
+        >
+          <Image
+            source={require('../assets/alarm-2.png')}
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleTabPress('profile')}
+          style={styles.navButton}
+        >
+          <Image
+            source={require('../assets/profile-2.png')}
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#f7f9fc',
+  },
+  container: {
+    flex: 1,
     padding: 16,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center', // 중앙 정렬
     marginBottom: 20,
+    position: 'relative', // 상대 위치 설정
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
+    textAlign: 'center', // 텍스트 중앙 정렬
+    flex: 1, // 제목을 화면 중앙에 배치
   },
-  card: {
-    padding: 16,
-    backgroundColor: '#fff',
+  refreshButton: {
+    position: 'absolute',
+    right: 0, // 오른쪽에 배치
+  },
+  refreshIcon: {
+    width: 24,
+    height: 24,
+  },
+  taskList: {
+    paddingBottom: 80,
+  },
+  taskCard: {
     borderRadius: 8,
+    padding: 12,
     marginBottom: 10,
+    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 2,
   },
-  courseTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#007BFF',
-  },
-  videoText: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 10,
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 20,
+  taskTitle: {
     fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  taskDetails: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  taskStatus: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  navigationBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    height: 60,
+    borderTopWidth: 3,
+    borderTopColor: '#ddd',
+    backgroundColor: '#fff',
+  },
+  navButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navIcon: {
+    width: 70,
+    height: 30,
   },
 });
+
+export default HomeScreen;

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet, Image } from 'react-native';
 
-const ManualScreen = ({ navigation }) => {
+// 매뉴얼 화면
+const ManualScreen = ({ onComplete }) => {
   const [currentPage, setCurrentPage] = useState(0);
 
   const pages = [
@@ -31,7 +32,7 @@ const ManualScreen = ({ navigation }) => {
     if (currentPage < pages.length - 1) {
       setCurrentPage(currentPage + 1);
     } else {
-      navigation.replace('Main'); // 마지막 페이지에서 메인 화면으로 이동
+      onComplete();
     }
   };
 
@@ -42,7 +43,7 @@ const ManualScreen = ({ navigation }) => {
   };
 
   const handleSkip = () => {
-    navigation.replace('Main'); // Skip 버튼을 누르면 바로 메인 화면으로 이동
+    onComplete();
   };
 
   return (
