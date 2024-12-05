@@ -29,7 +29,11 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [showManual, setShowManual] = useState(true);
-  const [assignments, setAssignments] = useState([]); // 로그인 후 데이터 저장
+  const [assignments, setAssignments] = useState([]);
+  const [lectures, setLectures] = useState([]);
+  const [username, setUsername] = useState('');
+  const [realName, setRealName] = useState('');
+  const [trackName, setTrackName] = useState('');
 
   if (!loaded) {
     return <SplashScreen onLoaded={() => setLoaded(true)} />;
@@ -38,9 +42,19 @@ export default function App() {
   if (!loggedIn) {
     return (
       <LoginScreen
-        onLoginSuccess={(userAssignments) => {
+        onLoginSuccess={(
+          userAssignments,
+          userLectures,
+          userUsername,
+          userRealName,
+          userTrackName
+        ) => {
           setLoggedIn(true);
-          setAssignments(userAssignments); // 로그인 성공 시 할당
+          setAssignments(userAssignments);
+          setLectures(userLectures);
+          setUsername(userUsername);
+          setRealName(userRealName);
+          setTrackName(userTrackName);
         }}
       />
     );
@@ -58,7 +72,13 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="HomeScreen">
         <Stack.Screen name="HomeScreen" options={{ headerShown: false }}>
-          {(props) => <HomeScreen {...props} assignments={assignments} />}
+          {(props) => (
+            <HomeScreen
+              {...props}
+              lectures={lectures}
+              assignments={assignments}
+            />
+          )}
         </Stack.Screen>
         <Stack.Screen
           name="NotificationScreen"
@@ -66,7 +86,15 @@ export default function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="ProfileScreen" options={{ headerShown: false }}>
-          {(props) => <ProfileScreen {...props} onLogout={handleLogout} />}
+          {(props) => (
+            <ProfileScreen
+              {...props}
+              username={username}
+              real_name={realName}
+              track_name={trackName}
+              onLogout={handleLogout}
+            />
+          )}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>

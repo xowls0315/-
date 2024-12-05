@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Checkbox from 'expo-checkbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios'; // Import Axios for HTTP requests
+import axios from 'axios';
 
 const LoginScreen = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
@@ -17,8 +17,8 @@ const LoginScreen = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false); // Add loading state
 
-  // Load login data from AsyncStorage
   useEffect(() => {
     const loadLoginData = async () => {
       const savedUsername = await AsyncStorage.getItem('username');
@@ -33,18 +33,21 @@ const LoginScreen = ({ onLoginSuccess }) => {
     loadLoginData();
   }, []);
 
-  // Handle login
   const handleLogin = async () => {
+    setLoading(true);
     try {
-      // Replace the URL with your API endpoint
       const response = await axios.post(
         'https://loginwitheclass-bkvxpnghzq-du.a.run.app',
         { username, password }
       );
-      console.log('Login Response:', response.data);
 
       if (response.data.success) {
-        const userAssignments = response.data.data.assignments; // 사용자 할 일 데이터
+        const userAssignments = response.data.data.assignments || [];
+        const userLectures = response.data.data.lectures || [];
+        const userUsername = response.data.data.username;
+        const userRealName = response.data.data.real_name; // real_name 데이터
+        const userTrackName = response.data.data.track_name; // track_name 데이터
+
         if (rememberMe) {
           await AsyncStorage.setItem('username', username);
           await AsyncStorage.setItem('password', password);
@@ -54,7 +57,14 @@ const LoginScreen = ({ onLoginSuccess }) => {
           await AsyncStorage.removeItem('password');
           await AsyncStorage.setItem('rememberMe', 'false');
         }
-        onLoginSuccess(userAssignments); // 로그인 성공 시 사용자 할 일 데이터 전달
+
+        onLoginSuccess(
+          userAssignments,
+          userLectures,
+          userUsername,
+          userRealName,
+          userTrackName
+        );
       } else {
         setError(response.data.message || '로그인 실패. 다시 시도해주세요.');
         setPassword('');
@@ -63,6 +73,8 @@ const LoginScreen = ({ onLoginSuccess }) => {
       console.error('Login Error:', error);
       setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
       setPassword('');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,8 +120,15 @@ const LoginScreen = ({ onLoginSuccess }) => {
         <Text style={styles.checkboxText}>아이디/비밀번호 저장</Text>
       </View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>로그인</Text>
+      <TouchableOpacity
+        style={[styles.loginButton, loading && styles.loginButtonLoading]} // Apply additional style when loading
+        onPress={handleLogin}
+        disabled={loading} // Disable button while loading
+      >
+        <Text style={styles.loginButtonText}>
+          {loading ? '강의 정보 불러오는 중...' : '로그인'}{' '}
+          {/* Change button text while loading */}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -193,6 +212,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loginButtonLoading: {
+    backgroundColor: '#ccc', // Gray background when loading
   },
 });
 

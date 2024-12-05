@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const ProfileScreen = ({ onLogout }) => {
+const ProfileScreen = ({ onLogout, username, real_name, track_name }) => {
   const navigation = useNavigation();
   const [selectedTab, setSelectedTab] = useState('profile');
 
@@ -28,31 +28,35 @@ const ProfileScreen = ({ onLogout }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>프로필</Text>
         <View style={styles.infoContainer}>
+          {/* 이름 표시 */}
           <View style={styles.infoRow}>
             <Image
               source={require('../assets/user-icon.png')}
               style={styles.icon}
             />
             <Text style={styles.infoLabel}>이름</Text>
-            <Text style={styles.infoText}>홍길동</Text>
+            <Text style={styles.infoText}>{real_name}</Text>
           </View>
+          {/* 학번 표시 */}
           <View style={styles.infoRow}>
             <Image
               source={require('../assets/id-icon.png')}
               style={styles.icon}
             />
             <Text style={styles.infoLabel}>학번</Text>
-            <Text style={styles.infoText}>2412345</Text>
+            <Text style={styles.infoText}>{username}</Text>
           </View>
+          {/* 소속 표시 */}
           <View style={styles.infoRow}>
             <Image
               source={require('../assets/school-icon.png')}
               style={styles.icon}
             />
             <Text style={styles.infoLabel}>소속</Text>
-            <Text style={styles.infoText}>모바일소프트웨어트랙</Text>
+            <Text style={styles.infoText}>{track_name}</Text>
           </View>
         </View>
+        {/* 로그아웃 버튼 */}
         <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
           <Text style={styles.logoutText}>로그아웃</Text>
         </TouchableOpacity>
@@ -176,6 +180,7 @@ const styles = StyleSheet.create({
     bottom: 30,
   },
   navButton: {
+    justifyContent: 'center',
     alignItems: 'center',
   },
   navIcon: {

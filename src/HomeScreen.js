@@ -3,84 +3,113 @@ import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const HomeScreen = ({ assignments }) => {
-  const navigation = useNavigation(); // 네비게이션 사용
-  const [taskList, setTaskList] = useState([]); // 현재 화면에 표시되는 할 일 목록
-  const [originalTaskList, setOriginalTaskList] = useState([]); // 새로고침을 위해 전체 데이터를 저장
+const HomeScreen = ({ lectures = [], assignments = [] }) => {
+  const navigation = useNavigation();
 
+  // 통합된 taskList를 관리하기 위한 상태
+  const [taskList, setTaskList] = useState([]);
+
+  // lectures와 assignments 데이터를 통합하여 taskList 생성
   useEffect(() => {
-    if (assignments && assignments.length > 0) {
-      setTaskList(assignments); // 초기 데이터 설정
-      setOriginalTaskList(assignments); // 새로고침을 위해 데이터 백업
-    }
-  }, [assignments]);
+    const combinedTasks = [
+      ...lectures.map((lecture) => ({
+        ...lecture,
+        type: 'lecture',
+      })),
+      ...assignments.map((assignment) => ({
+        ...assignment,
+        type: 'assignment',
+      })),
+    ];
+    setTaskList(combinedTasks);
+  }, [lectures, assignments]);
 
+  // 특정 task를 삭제하는 핸들러
   const handleRemoveTask = (task) => {
     setTaskList((prevTaskList) => prevTaskList.filter((item) => item !== task));
   };
 
+  // 새로고침 핸들러
   const handleRefresh = () => {
-    setTaskList(originalTaskList); // 새로고침 시 원래 데이터 복원
-  };
-
-  const handleTabPress = (tab) => {
-    if (tab === 'alarm') {
-      navigation.navigate('NotificationScreen');
-    } else if (tab === 'profile') {
-      navigation.navigate('ProfileScreen');
-    }
+    const refreshedTasks = [
+      ...lectures.map((lecture) => ({
+        ...lecture,
+        type: 'lecture',
+      })),
+      ...assignments.map((assignment) => ({
+        ...assignment,
+        type: 'assignment',
+      })),
+    ];
+    setTaskList(refreshedTasks);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Schedule</Text>
-          <TouchableOpacity
-            onPress={handleRefresh}
-            style={styles.refreshButton}
-          >
-            <Image
-              source={require('../assets/refresh.png')}
-              style={styles.refreshIcon}
-            />
-          </TouchableOpacity>
-        </View>
-        {/* Task List */}
-        {taskList.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>현재 처리할 할 일이 없습니다.</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={taskList}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => handleRemoveTask(item)} // 터치 시 taskCard 제거
-                style={styles.taskCard}
-              >
-                <Text style={styles.taskTitle}>과목: {item.courseName}</Text>
-                <Text style={styles.taskDetails}>
-                  마감 기한: {item.deadline}
-                </Text>
-                <Text style={styles.taskStatus}>상태: {item.status}</Text>
-                <Text style={styles.taskDetails}>할 일: {item.title}</Text>
-                <Text style={styles.taskDetails}>주차: {item.week}</Text>
-              </TouchableOpacity>
-            )}
-            keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={styles.taskList}
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Schedule</Text>
+        <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
+          <Image
+            source={require('../assets/refresh.png')}
+            style={styles.refreshIcon}
           />
-        )}
+        </TouchableOpacity>
       </View>
+
+      {/* Task List */}
+      {taskList.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>현재 처리할 할 일이 없습니다.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={taskList}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => handleRemoveTask(item)}
+              style={styles.taskCard}
+            >
+              {item.type === 'lecture' ? (
+                <>
+                  <Text style={styles.taskTitle}>영상 - {item.courseName}</Text>
+                  <Text style={styles.taskDetails}>
+                    강의 제목: {item.lecture_title}
+                  </Text>
+                  <Text style={styles.taskDetails}>
+                    강의 길이: {item.lecture_length}
+                  </Text>
+                  <Text style={styles.taskDetails}>
+                    마감 기한: {item.deadline}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.taskTitle}>과제 - {item.courseName}</Text>
+                  <Text style={styles.taskDetails}>
+                    과제 제목: {item.title}
+                  </Text>
+                  <Text style={styles.taskDetails}>
+                    마감 기한: {item.deadline}
+                  </Text>
+                  <Text style={styles.taskDetails}>상태: {item.status}</Text>
+                  <Text style={styles.taskDetails}>주차: {item.week}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item, index) => `${item.type}-${index}`}
+          contentContainerStyle={styles.taskList}
+        />
+      )}
+
       {/* Navigation Bar */}
       <View style={styles.navigationBar}>
         <TouchableOpacity
@@ -93,7 +122,7 @@ const HomeScreen = ({ assignments }) => {
           />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => handleTabPress('alarm')}
+          onPress={() => navigation.navigate('NotificationScreen')}
           style={styles.navButton}
         >
           <Image
@@ -102,7 +131,7 @@ const HomeScreen = ({ assignments }) => {
           />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => handleTabPress('profile')}
+          onPress={() => navigation.navigate('ProfileScreen')}
           style={styles.navButton}
         >
           <Image
@@ -120,16 +149,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f7f9fc',
   },
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center', // 중앙 정렬
     marginBottom: 20,
     position: 'relative', // 상대 위치 설정
+    paddingTop: 16,
   },
   title: {
     fontSize: 30,
@@ -140,39 +166,39 @@ const styles = StyleSheet.create({
   refreshButton: {
     position: 'absolute',
     right: 0, // 오른쪽에 배치
+    padding: 16,
+    marginTop: 20,
   },
   refreshIcon: {
     width: 24,
     height: 24,
+    marginTop: 15,
   },
   taskList: {
+    paddingHorizontal: 16,
     paddingBottom: 80,
   },
   taskCard: {
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
     backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   taskTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    marginBottom: 8,
     color: '#333',
   },
   taskDetails: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4,
-  },
-  taskStatus: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 4,
+    marginBottom: 4,
   },
   emptyContainer: {
     flex: 1,
@@ -191,6 +217,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 3,
     borderTopColor: '#ddd',
     backgroundColor: '#fff',
+    left: 0,
+    right: 0,
   },
   navButton: {
     justifyContent: 'center',
