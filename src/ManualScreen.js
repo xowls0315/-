@@ -12,7 +12,7 @@ const ManualScreen = ({ onComplete }) => {
       buttonText: 'Next',
     },
     {
-      text: '각각의 강의를 터치하면 상세 내용을 알아볼 수 있어요!',
+      text: '각각의 강의를 살펴보면 상세 내용을 알아볼 수 있어요!',
       image: require('../assets/page-2.png'),
       buttonText: 'Next',
     },
@@ -118,6 +118,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   icon: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -20 }, { translateY: -25 }], // 아이콘의 크기 절반으로 조정
     width: 40,
     height: 50,
   },
