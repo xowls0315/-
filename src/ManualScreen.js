@@ -116,12 +116,11 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
     marginTop: 20,
+    position: 'relative',
   },
   icon: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -20 }, { translateY: -25 }], // 아이콘의 크기 절반으로 조정
+    position: 'absolute', // 아이콘을 절대 위치로 설정
+    left: '50%', // 컨테이너의 중앙으로 이동
     width: 40,
     height: 50,
   },

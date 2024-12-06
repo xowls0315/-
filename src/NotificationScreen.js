@@ -10,6 +10,7 @@ import {
   Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
 import { RadioButton } from 'react-native-paper'; // react-native-paper에서 RadioButton 사용
 
 const NotificationScreen = ({ lectures = [], assignments = [] }) => {
@@ -17,6 +18,94 @@ const NotificationScreen = ({ lectures = [], assignments = [] }) => {
   const [taskList, setTaskList] = useState([]);
   const [modalVisible, setModalVisible] = useState(false); // 모달 상태 관리
   const [selectedTime, setSelectedTime] = useState('3일 전'); // 선택된 알람 시간
+
+  const sendNotification = async (task) => {
+    try {
+      const title =
+        task.type === 'lecture'
+          ? `강의 - ${task.courseName}`
+          : `과제 - ${task.courseName}`;
+
+      const message =
+        task.type === 'lecture'
+          ? `${task.lecture_title} 시청까지 ${calculateRemainingTime(
+              task.deadline
+            )}`
+          : `${task.title} 제출까지 ${calculateRemainingTime(task.deadline)}`;
+
+      const deadlineTime = new Date(task.deadline).getTime();
+      const timeRemaining = deadlineTime - Date.now(); // 현재시간과 데드라인 차이
+
+      const notificationTime = calculateTimeBeforeNotification(selectedTime); // 사용자가 선택한 알림 시간
+
+      // 남은 시간이 선택된 알림 시간보다 적을 경우에만 알림 예약
+      if (timeRemaining <= notificationTime) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: title,
+            body: message,
+          },
+          trigger: {
+            date: new Date(deadlineTime - notificationTime),
+          },
+        });
+      } else {
+        console.log('알림 예약 시간이 아직 충분히 남았습니다.');
+      }
+    } catch (error) {
+      console.error('Notification scheduling error:', error);
+    }
+  };
+
+  // 사용자가 선택한 시간대에 맞게 알림을 예약
+  const scheduleNotificationsForTasks = () => {
+    const currentTime = new Date();
+
+    taskList.forEach((task) => {
+      const deadlineTime = new Date(task.deadline).getTime();
+      const timeRemaining = deadlineTime - currentTime.getTime(); // 데드라인과 현재 시간 차이
+      const notificationTime = calculateTimeBeforeNotification(selectedTime); // 사용자가 선택한 시간
+
+      // 남은 시간이 선택한 알림 시간보다 작거나 같을 때만 알림 예약
+      if (timeRemaining <= notificationTime) {
+        sendNotification(task);
+      }
+    });
+  };
+
+  // 알림 예약 시 선택된 시간에 따라 미리 알림 시간 계산
+  const calculateTimeBeforeNotification = (time) => {
+    switch (time) {
+      case '3시간 전':
+        return 3 * 60 * 60 * 1000; // 3시간
+      case '6시간 전':
+        return 6 * 60 * 60 * 1000; // 6시간
+      case '12시간 전':
+        return 12 * 60 * 60 * 1000; // 12시간
+      case '1일 전':
+        return 24 * 60 * 60 * 1000; // 1일
+      case '3일 전':
+        return 3 * 24 * 60 * 60 * 1000; // 3일
+      default:
+        return 0;
+    }
+  };
+
+  useEffect(() => {
+    // ✅ 알림 전송 함수 호출
+    scheduleNotificationsForTasks();
+
+    const subscription = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        // ✅ 알림이 수신된 경우 처리할 코드
+        console.log('알림 전송 완료', notification);
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [taskList]);
 
   // taskList 생성 (홈화면과 동일한 방식)
   useEffect(() => {
@@ -47,50 +136,37 @@ const NotificationScreen = ({ lectures = [], assignments = [] }) => {
   // calculateRemainingTimeInSeconds: 남은 시간을 초 단위로 계산하여 반환
   const calculateRemainingTimeInSeconds = (deadline) => {
     const currentTime = new Date();
-    let correctedDeadline = deadline;
-
-    // 연도가 누락된 경우 현재 연도를 추가
-    if (correctedDeadline && correctedDeadline.match(/^\d{2}-\d{2}/)) {
-      const currentYear = new Date().getFullYear();
-      correctedDeadline = `${currentYear}-${correctedDeadline}`; // 'MM-DD HH:mm:ss' → 'YYYY-MM-DD HH:mm:ss'
-    }
-
-    // ISO 8601 형식으로 강제 변환
-    if (correctedDeadline && correctedDeadline.includes(' ')) {
-      correctedDeadline = correctedDeadline.replace(' ', 'T') + 'Z';
-    }
-
-    const deadlineTime = new Date(correctedDeadline).getTime();
+    const deadlineTime = new Date(deadline).getTime();
 
     if (isNaN(deadlineTime)) {
-      console.error('Invalid date format:', correctedDeadline);
-      return 0;
+      return 0; // 잘못된 날짜 형식일 경우 0 반환
     }
 
-    const timeDiff = deadlineTime - currentTime.getTime();
-
-    return timeDiff; // 초 단위로 반환
+    return deadlineTime - currentTime.getTime();
   };
 
   const calculateRemainingTime = (deadline) => {
-    const timeDiff = calculateRemainingTimeInSeconds(deadline);
-    const daysRemaining = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const currentTime = new Date();
+    const deadlineTime = new Date(deadline).getTime();
+    const timeRemaining = deadlineTime - currentTime.getTime();
+
+    if (timeRemaining <= 0) {
+      return '마감되었습니다';
+    }
+
+    const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
     const hoursRemaining = Math.floor(
-      (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
     );
     const minutesRemaining = Math.floor(
-      (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+      (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
     );
 
-    if (timeDiff > 0) {
-      if (daysRemaining > 0) {
-        return `${daysRemaining}일 ${hoursRemaining}시간 ${minutesRemaining}분 남았습니다.`;
-      } else {
-        return `${hoursRemaining}시간 ${minutesRemaining}분 남았습니다.`;
-      }
-    } else {
-      return `기한이 지났습니다.`;
+    if (daysRemaining > 0) {
+      return `${daysRemaining}일 ${hoursRemaining}시간 ${minutesRemaining}분 남음`;
     }
+
+    return `${hoursRemaining}시간 ${minutesRemaining}분 남음`;
   };
 
   const handleAlarmButtonPress = () => {
@@ -104,6 +180,33 @@ const NotificationScreen = ({ lectures = [], assignments = [] }) => {
   const handleTimeSelection = (time) => {
     setSelectedTime(time); // 선택한 시간 상태 업데이트
     setModalVisible(false); // 모달 닫기
+
+    // 알림 시간 설정
+    let notificationTime;
+    const currentTime = new Date();
+
+    switch (time) {
+      case '3시간 전':
+        notificationTime = currentTime.getTime() + 3 * 60 * 60 * 1000; // 3시간 후
+        break;
+      case '6시간 전':
+        notificationTime = currentTime.getTime() + 6 * 60 * 60 * 1000; // 6시간 후
+        break;
+      case '12시간 전':
+        notificationTime = currentTime.getTime() + 12 * 60 * 60 * 1000; // 12시간 후
+        break;
+      case '1일 전':
+        notificationTime = currentTime.getTime() + 24 * 60 * 60 * 1000; // 1일 후
+        break;
+      case '3일 전':
+        notificationTime = currentTime.getTime() + 3 * 24 * 60 * 60 * 1000; // 3일 후
+        break;
+      default:
+        notificationTime = currentTime.getTime();
+    }
+
+    // 선택한 시간에 맞춰 알림 예약
+    scheduleNotificationsForTasks();
   };
 
   return (
